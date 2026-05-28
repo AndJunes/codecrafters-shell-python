@@ -1,5 +1,6 @@
 import sys
 import os
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -21,39 +22,54 @@ def main():
         sys.stdout.write("$ ")
         sys.stdout.flush()
         try:
-            command = input()
+            line = input()
         except EOFError:
             break
 
-        if command == "exit":
+        try:
+            tokens = shlex.split(line, posix=True)
+        except ValueError as e:
+            print(f"shell: syntax error: {e}", file=sys.stderr)
+            continue
+
+        if not tokens:
+            continue
+
+        name = tokens[0]
+        args = tokens[1:]
+
+        if name == "exit":
             break
-        elif command.startswith("cd "):
-            path = command[3:]
+        elif name == "pwd":
+            print(os.getcwd())
+        elif name == "cd":
+            if not args:
+                continue
+            path = args[0]
             target = os.path.expanduser(path)
             try:
                 os.chdir(target)
             except FileNotFoundError:
-                print(f'cd: {path}: No such file or directory')
-        elif command == 'pwd':
-            print(os.getcwd())
-        elif command.startswith("echo "):
-            print(command[5:])
-        elif command.startswith("type "):
-            name = command[5:]
-            if name in BUILTINS:
-                print(f"{name} is a shell builtin")
+                print(f"cd: {path}: No such file or directory")
+        elif name == "echo":
+            print(" ".join(args))
+        elif name == "type":
+            if not args:
+                continue
+            target_name = args[0]
+            if target_name in BUILTINS:
+                print(f"{target_name} is a shell builtin")
             else:
-                executable_path = find_in_path(name)
+                executable_path = find_in_path(target_name)
                 if executable_path:
-                    print(f"{name} is {executable_path}")
+                    print(f"{target_name} is {executable_path}")
                 else:
-                    print(f"{name}: not found")
+                    print(f"{target_name}: not found")
         else:
-            parts = command.split()
-            if parts and find_in_path(parts[0]):
-                subprocess.run(parts)
+            if find_in_path(name):
+                subprocess.run([name, *args])
             else:
-                print(f"{command}: command not found")
+                print(f"{line}: command not found")
 
 
 if __name__ == "__main__":
