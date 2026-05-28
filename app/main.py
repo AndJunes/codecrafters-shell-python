@@ -32,7 +32,7 @@ def main():
             try:
                 os.chdir(path)
             except FileNotFoundError:
-                print(f'{command}: {path}: No such file or directory')
+                print(f'cd: {path}: No such file or directory')
         elif command == 'pwd':
             print(os.getcwd())
         elif command.startswith("echo "):
