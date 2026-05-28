@@ -3,7 +3,7 @@ import os
 import subprocess
 from pathlib import Path
 
-BUILTINS = {"exit", "echo", "type", "pwd"}
+BUILTINS = {"exit", "echo", "type", "pwd", "cd"}
 
 
 def find_in_path(name: str) -> str | None:
@@ -27,6 +27,12 @@ def main():
 
         if command == "exit":
             break
+        elif command.startswith("cd "):
+            path = command[3:]
+            try:
+                os.chdir(path)
+            except FileNotFoundError:
+                print(f'{command}: {path}: No such file or directory')
         elif command == 'pwd':
             print(os.getcwd())
         elif command.startswith("echo "):
