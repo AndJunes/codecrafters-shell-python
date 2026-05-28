@@ -29,8 +29,9 @@ def main():
             break
         elif command.startswith("cd "):
             path = command[3:]
+            target = os.path.expanduser(path)
             try:
-                os.chdir(path)
+                os.chdir(target)
             except FileNotFoundError:
                 print(f'cd: {path}: No such file or directory')
         elif command == 'pwd':
